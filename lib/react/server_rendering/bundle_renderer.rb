@@ -24,6 +24,11 @@ module React
         js_code << options.fetch(:code, '')
 
         filenames.each do |filename|
+          asset_container
+          if asset_container.instance_of? WebpackerManifestContainer
+            asset_container.engine = options.fetch(:engine, Webpacker)
+            asset_container.relative_path = options.fetch(:relative_path, '')
+          end
           js_code << asset_container.find_asset(filename)
         end
 

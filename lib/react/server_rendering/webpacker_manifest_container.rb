@@ -8,6 +8,9 @@ module React
     # - compiled pack
     class WebpackerManifestContainer
 
+      attr_accessor :engine
+      attr_accessor :relative_path
+
       begin
         MAJOR, MINOR, PATCH, _ = Bundler.locked_gems.specs.find { |gem_spec| gem_spec.name == 'webpacker' }.version.segments
       rescue
@@ -39,9 +42,9 @@ module React
         end
       else
         def find_asset(logical_path)
-          asset_path = Webpacker.manifest.lookup(logical_path).to_s
-          if Webpacker.dev_server.running?
-            ds = Webpacker.dev_server
+          asset_path = engine.manifest.lookup(logical_path).to_s
+          if engine.dev_server.running?
+            ds = engine.dev_server
             # Remove the protocol and host from the asset path. Sometimes webpacker includes this, sometimes it does not
             asset_path.slice!("#{ds.protocol}://#{ds.host_with_port}")
             dev_server_asset = open("#{ds.protocol}://#{ds.host_with_port}#{asset_path}").read
@@ -55,21 +58,21 @@ module React
 
       if MAJOR < 3
         def manifest
-          Webpacker::Manifest
+          engine::Manifest
         end
       else
         def manifest
-          Webpacker.manifest
+          engine.manifest
         end
       end
 
       if MAJOR < 3
         def config
-          Webpacker::Configuration
+          engine::Configuration
         end
       else
         def config
-          Webpacker.config
+          engine.config
         end
       end
 
@@ -79,7 +82,7 @@ module React
         end
       elsif MAJOR >= 3
         def file_path path
-          ::Rails.root.join('public', manifest.lookup!(path)[1..-1])
+          ::Rails.root.join(relative_path, 'public', manifest.lookup!(path)[1..-1])
         end
       else # 1.0 and 1.1 support
         def file_path path
